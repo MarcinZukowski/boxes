@@ -28,7 +28,7 @@ class CornerBox(Boxes):
         self.buildArgParser("h", "outside")
         self.argparser.add_argument(
             "--depth",  action="store", type=float, default=100.0,
-            help="depth in mm")
+            help="side wall depth (in mm)")
         self.argparser.add_argument(
             "--angle",  action="store", type=float, default=90,
             help="corner angle (in degrees)")
@@ -37,12 +37,11 @@ class CornerBox(Boxes):
             choices=["none", "lid", "closed"],
             help="style of the top")
         self.argparser.add_argument(
-            "--style",  action="store", type=str, default="normal",
-            choices=["normal", "inverse"],
-            help="style of the front / base / top")
+            "--inverse",  action="store", type=boolarg, default=False,
+            help="inverse the finger directions")
         self.argparser.add_argument(
             "--wide_front", action="store", type=boolarg, default=False,
-            help="wide front (no fingers on sides)")
+            help="wide front (no fingers on edges)")
 
 
     def triangularWall(self, side1, angle1, side2, angle2, side3, edges="eee",
@@ -95,14 +94,14 @@ class CornerBox(Boxes):
 
     def render(self):
 
-        depth, h, angle, style, wide_front = self.depth, self.h, self.angle, self.style, self.wide_front
+        depth, h, angle, inverse, wide_front = self.depth, self.h, self.angle, self.inverse, self.wide_front
 
         # Determine edge types based on settings
-        base_edge = 'F' if style == "inverse" else 'f'
-        bottom_edge = 'F' if style == "normal" else 'f'
+        base_edge = 'F' if inverse else 'f'
+        bottom_edge = 'f' if inverse else 'F'
         top_edge = bottom_edge if self.top in ("closed") else 'e'
-        side_side_edge = 'e' if wide_front else 'g'
-        front_side_edge = 'E' if wide_front else 'G'
+        side_vertical_edge = 'e' if wide_front else 'g'
+        front_vertical_edge = 'E' if wide_front else 'G'
 
         # TODO: Handle outside
 
@@ -124,11 +123,11 @@ class CornerBox(Boxes):
 
         # Draw the side walls
         self.rectangularWall(depth, h, move="down right",
-                             edges=bottom_edge + 'g' + top_edge + side_side_edge)
+                             edges=bottom_edge + 'g' + top_edge + side_vertical_edge)
         self.rectangularWall(depth, h, move="right",
-                             edges=bottom_edge + 'G' + top_edge + side_side_edge)
+                             edges=bottom_edge + 'G' + top_edge + side_vertical_edge)
 
         # Draw the front wall
         front = self.front_width(depth, angle)
         self.rectangularWall(front, h, move="right",
-                             edges=bottom_edge + front_side_edge + top_edge + front_side_edge)
+                             edges=bottom_edge + front_vertical_edge + top_edge + front_vertical_edge)
